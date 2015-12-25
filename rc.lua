@@ -11,6 +11,7 @@ local beautiful = require("beautiful")
 local naughty = require("naughty")
 local menubar = require("menubar")
 local vicious = require("vicious")
+local lain = require("lain")
 local blingbling =require("blingbling")
 -- {{{ Error handling
 -- Check if awesome encountered an error during startup and fell back to
@@ -101,7 +102,7 @@ boot_graph = blingbling.progress_graph({
                     font="Droid Sans",
                     font_size = "12",
                     text_color = "#C1C0DE",
-                    label ="Boot:$percent%",
+                    label ="/boot $percent%",
                     graph_color = "#1793D099",
                     graph_line_color = "#1793D033",
                     graph_background_color = "#00000033"
@@ -116,7 +117,7 @@ root_graph = blingbling.progress_graph({
                     font = "Droid Sans",
                     font_size = "12",
                     text_color = "#C1C0DE",
-                    label ="Root $percent%",
+                    label ="/root $percent%",
                     graph_color = "#1793D099",
                     graph_background_color = "#00000033",
                     graph_line_color = "#1793D033"
@@ -131,7 +132,7 @@ home_graph = blingbling.progress_graph({
                     font = "Droid Sans",
                     font_size = "12",
                     text_color = "#C1C0DE",
-                    label ="Home $percent%",
+                    label ="/home $percent%",
                     graph_color = "#1793D099",
                     graph_background_color = "#00000033",
                     graph_line_color = "#1793D033"
@@ -223,8 +224,26 @@ menubar.utils.terminal = terminal -- Set the terminal for applications that requ
 -- }}}
 
 -- {{{ Wibox
+markup      = lain.util.markup
+darkblue    = theme.bg_focus
+white       = beautiful.fg_focus
+blue        = "#1793D0"
+red         = "#EB8F8F"
+gray        = "#858585"
+
+local util = awful.util
+
 -- Create a textclock widget
-mytextclock = awful.widget.textclock()
+--mytextclock = awful.widget.textclock()
+-- Textclock
+mytextclock = awful.widget.textclock(markup(gray, " %a")
+.. markup(blue, " %d ") .. markup(gray, "%b ") ..  markup(blue, "%H:%M "))
+-- Calendar
+lain.widgets.calendar:attach(mytextclock, { fg = gray })
+-- Spacers
+space = wibox.widget.textbox(' ')
+bigspace = wibox.widget.textbox('   ')
+separator = wibox.widget.textbox(' ⁞ ')
 
 -- Create a wibox for each screen and add it
 mywibox = {}
@@ -300,15 +319,18 @@ for s = 1, screen.count() do
     local left_layout = wibox.layout.fixed.horizontal()
     left_layout:add(mylauncher)
     left_layout:add(mytaglist[s])
+    left_layout:add(separator)
     left_layout:add(cpu_graph)
     for i=1,4 do
         left_layout:add(cores_graphs[i])
     end
     left_layout:add(mem_graph)
+    left_layout:add(separator)
     left_layout:add(boot_graph)
     left_layout:add(root_graph)
     left_layout:add(home_graph)
     left_layout:add(mypromptbox[s])
+    left_layout:add(separator)
 
     -- Widgets that are aligned to the right
     local right_layout = wibox.layout.fixed.horizontal()
@@ -339,7 +361,9 @@ root.buttons(awful.util.table.join(
 -- {{{ Key bindings
 globalkeys = awful.util.table.join(
     awful.key({ modkey,           }, "Left",   awful.tag.viewprev       ),
+    awful.key({ modkey, "Control"  }, "h",     awful.tag.viewprev       ),
     awful.key({ modkey,           }, "Right",  awful.tag.viewnext       ),
+    awful.key({ modkey, "Control"  }, "l",     awful.tag.viewnext       ),
     awful.key({ modkey,           }, "Escape", awful.tag.history.restore),
 
     awful.key({ modkey,           }, "j",
@@ -353,6 +377,9 @@ globalkeys = awful.util.table.join(
             if client.focus then client.focus:raise() end
         end),
     awful.key({ modkey,           }, "w", function () mymainmenu:show() end),
+
+    awful.key({ altkey, "Control" }, "+", function () lain.util.useless_gaps_resize(1) end),
+    awful.key({ altkey, "Control" }, "-", function () lain.util.useless_gaps_resize(-1) end),
 
     -- Layout manipulation
     awful.key({ modkey, "Shift"   }, "j", function () awful.client.swap.byidx(  1)    end),
